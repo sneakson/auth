@@ -17,9 +17,9 @@ router.post('/login', (req, res) => {
     authController.login(login).then((loggedIn) => {
         if(loggedIn){
             req.session.username = login.username;
-            res.send(`${login.username} successfully logged in`);
+            return res.send(`${login.username} successfully logged in`);
         }else{
-            res.status(401).send(`Incorrect Password`);
+            return res.status(401).send(`Incorrect Password`);
         }
     }).catch((message) => {
         res.send(message);

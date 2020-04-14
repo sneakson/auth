@@ -4,8 +4,8 @@ export class User{
     password: string = '';
 
     constructor(other: User){
-        this.id = other.id;
-        this.username = other.username;
-        this.password = other.password;
+        this.id = other?.id;
+        this.username = other?.username;
+        this.password = other?.password;
     }
 }

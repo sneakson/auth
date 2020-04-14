@@ -13,6 +13,7 @@ export class UserController {
             bcrypt.hash(user.password, 10, (err, encrypted) => {
                 if(err) {
                     reject(err);
+                    return;
                 }
 
                 user.password = encrypted;
@@ -26,12 +27,64 @@ export class UserController {
         });
     }
 
-    public get(username: string): Promise<User> {
+    public getWithCreds(username: string): Promise<User> {
         return new Promise( (resolve, reject) => {
            const userInDB = users.get(username);
            resolve(userInDB);
         });
     }
 
+    public get(username: string): Promise<User> {
+        return new Promise( (resolve, reject) => {
+            const userInDb = users.get(username);
+            let cleanUser;
+            if(userInDb){
+                cleanUser = new User(userInDb);
+                delete cleanUser.password;
+            }
+            resolve(cleanUser);
+        });
+    }
 
+    public getAll(): Promise<User[]> {
+        return new Promise( (resolve, reject) => {
+            let usersInDb: User[] = [];
+            users.forEach((value => {
+                const cleanUser = new User(value);
+                delete cleanUser.password;
+                usersInDb.push(cleanUser);
+            }));
+            resolve(usersInDb);
+        });
+    }
+
+    public update(user: User): Promise<User> {
+        return new Promise( async (resolve, reject) => {
+            const userInDb = await this.get(user.username);
+            if(!userInDb){
+                resolve(null);
+                return;
+            }
+
+            user.password = bcrypt.hashSync(user.password, 10);
+            users.set(user.username, user);
+
+            const cleanUser = new User(user);
+            delete cleanUser.password;
+
+            resolve(cleanUser);
+        });
+    }
+
+    public delete(username: string): Promise<boolean> {
+        return new Promise( async (resolve, reject) => {
+            if(users.has(username)){
+                users.delete(username);
+                resolve(true);
+                return;
+            }else{
+                resolve(false);
+            }
+        });
+    }
 }

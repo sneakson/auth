@@ -10,7 +10,7 @@ export class AuthController {
 
     public async login(login: User): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
-            const userInDb = await userController.get(login.username);
+            const userInDb = await userController.getWithCreds(login.username);
             if(!userInDb){
                 reject(`${login.username} not registered`);
                 return;
