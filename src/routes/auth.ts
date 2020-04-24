@@ -21,8 +21,8 @@ router.post('/login', (req, res) => {
         }else{
             return res.status(401).send(`Incorrect Password`);
         }
-    }).catch((message) => {
-        res.send(message);
+    }).catch((err: Error) => {
+        return res.status(400).send(err.message);
     });
 });
 
@@ -44,12 +44,12 @@ router.delete('/logout', (req, res) => {
         console.log("Logging " + req.session.username + " out.");
         req.session.destroy((err) => {
             if (err) {
-                return console.log(err);
+                throw err;
             }
-            res.send({msg: 'successfully logged out'});
+            return res.send({msg: 'successfully logged out'});
         });
     }else{
-        res.send('Not logged in');
+        return res.send('Not logged in');
     }
 });
 

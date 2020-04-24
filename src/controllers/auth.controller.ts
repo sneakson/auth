@@ -9,15 +9,12 @@ export class AuthController {
     }
 
     public async login(login: User): Promise<boolean> {
-        return new Promise(async (resolve, reject) => {
-            const userInDb = await userController.getWithCreds(login.username);
-            if(!userInDb){
-                reject(`${login.username} not registered`);
-                return;
-            }
+        const userInDb = await userController.getWithCreds(login.username);
+        if(!userInDb){
+            throw new Error(`${login.username} not registered`);
+        }
 
-            resolve(this.comparePassword(login.password, userInDb.password));
-        });
+        return this.comparePassword(login.password, userInDb.password);
     }
 
     private async comparePassword(testHash: string, storedHash: string): Promise<boolean>{

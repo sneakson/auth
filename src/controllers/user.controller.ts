@@ -8,83 +8,65 @@ export class UserController {
 
     }
 
-    public create(user: User): Promise<User>{
-        return new Promise( (resolve, reject) =>{
-            bcrypt.hash(user.password, 10, (err, encrypted) => {
-                if(err) {
-                    reject(err);
-                    return;
-                }
+    public async create(user: User): Promise<User>{
+        user.password = this.hashPassword(user.password);
+        users.set(user.username, user);
 
-                user.password = encrypted;
-                users.set(user.username, user);
+        user = new User(user);
+        delete user.password;
 
-                user = new User(user);
-                delete user.password;
-
-                resolve(user);
-            });
-        });
+        return user;
     }
 
-    public getWithCreds(username: string): Promise<User> {
-        return new Promise( (resolve, reject) => {
-           const userInDB = users.get(username);
-           resolve(userInDB);
-        });
+    private hashPassword(password: string): string{
+        return bcrypt.hashSync(password, 10);
     }
 
-    public get(username: string): Promise<User> {
-        return new Promise( (resolve, reject) => {
-            const userInDb = users.get(username);
-            let cleanUser;
-            if(userInDb){
-                cleanUser = new User(userInDb);
-                delete cleanUser.password;
-            }
-            resolve(cleanUser);
-        });
+    public async getWithCreds(username: string): Promise<User> {
+        return users.get(username);
     }
 
-    public getAll(): Promise<User[]> {
-        return new Promise( (resolve, reject) => {
-            let usersInDb: User[] = [];
-            users.forEach((value => {
-                const cleanUser = new User(value);
-                delete cleanUser.password;
-                usersInDb.push(cleanUser);
-            }));
-            resolve(usersInDb);
-        });
-    }
-
-    public update(user: User): Promise<User> {
-        return new Promise( async (resolve, reject) => {
-            const userInDb = await this.get(user.username);
-            if(!userInDb){
-                resolve(null);
-                return;
-            }
-
-            user.password = bcrypt.hashSync(user.password, 10);
-            users.set(user.username, user);
-
-            const cleanUser = new User(user);
+    public async get(username: string): Promise<User> {
+        const userInDb = users.get(username);
+        let cleanUser;
+        if(userInDb){
+            cleanUser = new User(userInDb);
             delete cleanUser.password;
-
-            resolve(cleanUser);
-        });
+        }
+        return cleanUser;
     }
 
-    public delete(username: string): Promise<boolean> {
-        return new Promise( async (resolve, reject) => {
-            if(users.has(username)){
-                users.delete(username);
-                resolve(true);
-                return;
-            }else{
-                resolve(false);
-            }
-        });
+    public async getAll(): Promise<User[]> {
+        let usersInDb: User[] = [];
+        users.forEach((value => {
+            const cleanUser = new User(value);
+            delete cleanUser.password;
+            usersInDb.push(cleanUser);
+        }));
+        return usersInDb;
+    }
+
+    public async update(user: User): Promise<User> {
+        const userInDb = await this.get(user.username);
+        if(!userInDb){
+            return null;
+        }
+
+        user.password = this.hashPassword(user.password);
+        users.set(user.username, user);
+
+        const cleanUser = new User(user);
+        delete cleanUser.password;
+
+        return cleanUser;
+    }
+
+    public async delete(username: string): Promise<boolean> {
+        if(users.has(username)){
+            users.delete(username);
+            return true;
+        }else{
+            return false;
+        }
     }
 }
